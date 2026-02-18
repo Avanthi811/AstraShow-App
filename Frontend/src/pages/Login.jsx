@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import Cookies from "js-cookie";
 
 const LogIn = () => {
   const [email, setEmail] = useState("");
@@ -13,7 +14,7 @@ const LogIn = () => {
     setTimeout(() => setStartAnim(true), 700);
   }, []);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!email || !password) {
@@ -23,6 +24,25 @@ const LogIn = () => {
 
     setError("");
     console.log("Login submitted", { email, password });
+    try{
+      const res = await fetch("http://localhost:5000/api/auth/login", {
+        method: "POST",
+        headers: {  "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await res.json();
+      console.log("Login response:", data); 
+      if (!res.ok) {
+        setError(data.message || "Login failed");
+        return;
+      }
+      Cookies.set("token", data.token);
+      Cookies.set("user", JSON.stringify(data.user));
+      navigate("/");  
+    } catch (err) {
+      console.error(err);
+      setError("Something went wrong. Please try again.");
+    }
   };
 
   return (
@@ -86,7 +106,7 @@ const LogIn = () => {
 
           <button
             type="submit"
-            className="w-full bg-blue-400 text-white font-semibold py-2 px-4 rounded-lg hover:shadow-xl hover:bg-blue-500 transition-all duration-200 mt-2 text-sm md:text-base"
+            className="w-full bg-blue-400 text-white font-semibold py-2 px-4 rounded-lg hover:shadow-xl hover:bg-blue-500 transition-all duration-200 mt-2 text-sm md:text-base cursor-pointer"
           >
             Log In
           </button>

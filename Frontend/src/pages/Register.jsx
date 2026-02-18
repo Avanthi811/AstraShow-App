@@ -8,25 +8,41 @@ const Register = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [startAnim, setStartAnim] = useState(false);
-
   const navigate = useNavigate();
-
   useEffect(() => {
     setTimeout(() => setStartAnim(true), 700);
   }, []);
 
-  const handleSubmit = (e) => {
+   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError("");
     if (!name || !email || !password || !confirmPassword) {
-      setError("Please fill in all fields");
+      setError("All fields are required");
       return;
     }
     if (password !== confirmPassword) {
-      setError("Passwords do not match");
+      setError("Passwords do not match"); 
       return;
     }
-    setError("");
-    console.log("Register submitted", { name, email, password });
+    try {
+      const res = await fetch("http://localhost:5000/api/auth/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ name, email, password }),
+      });
+      const data = await res.json();
+      console.log("Register response:", data);
+      if (!res.ok) {
+        setError(data.message || "Registration failed");
+        return;
+      }
+      navigate("/");
+    } catch (err) {
+      console.error(err);
+      setError("Something went wrong. Please try again.");
+    } 
   };
 
   return (
@@ -106,7 +122,7 @@ const Register = () => {
           </div>
           <button
             type="submit"
-            className="w-full bg-blue-400 text-white font-semibold py-2 px-4 rounded-lg  hover:bg-blue-500 transition-all duration-200 mt-2 text-sm md:text-base"
+            className="w-full bg-blue-400 text-white font-semibold py-2 px-4 rounded-lg  hover:bg-blue-500 transition-all duration-200 mt-2 text-sm md:text-base cursor-pointer"
           >
             Register
           </button>
